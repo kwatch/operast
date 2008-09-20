@@ -1,0 +1,122 @@
+###
+### $Rev$
+### $Release: $
+### $Copyright$
+### $License$
+###
+
+properties:
+  - release    :  0.1.0
+
+
+parameters:
+  - project    :  operast
+  - gem_name   :  operast
+  - copyright  :  copyright(c) 2008 kuwata-lab.com all rights reserved.
+  - license    :  MIT License
+  - text_files :  [README.rdoc, CHANGES.txt, MIT-LICENSE, setup.rb, $(gem_name).gemspec]
+  - apidocdir  :  doc-api
+  - home*      :  ENV['HOME']
+  #- benchmark_files* : Dir.glob('benchmark/tmpl_*')
+  - libfiles*  :  Dir.glob("lib/**/*")
+  - base       :  $(project)-$(release)
+  - gem_base   :  $(gem_name)-$(release)
+  #
+  #- exclude_libs : [ ]
+
+
+recipes:
+
+  - product:	:all
+    ingreds:	[ $(text_files) ]
+
+  - product:	:packages
+    desc:       create packages
+    ingreds:	[ $(base).tar.gz, $(gem_base).gem ]
+
+  - product:	:clear
+    method*: |
+	rm_rf '$(project)-*.*', '$(gem_name)-*.gem', apidocdir
+
+  - product:	:apidoc
+    desc:	create api document by RDoc
+    ingreds:	[ $(apidocdir)/index.html ]
+
+  - product:	$(apidocdir)/index.html
+    ingreds:	[ $(libfiles), README.rdoc ]
+    method*: |
+        rm_rf '$(apidocdir)'
+	sys "rdoc -o $(apidocdir) -S -m README.rdoc README.rdoc lib/*"
+
+  - product:	$(project)-$(release).tar.gz
+    desc:	create *.tar.gz
+    ingreds:	[ $(project)-$(release) ]
+    method*: |
+        rm_f @product if test(?f, @product)
+        tar_czf @product, @ingred
+
+  - product:    $(gem_name)-$(release).gem
+    desc:	create *.gem
+    ingreds:	[ $(project)-$(release) ]
+    method*: |
+        dir = @ingred
+	#cd dir do
+        #  Gem.manage_gems
+        #  Gem::GemRunner.new.run ['build', '$(gem_name).gemspec']
+	#end
+        chdir dir do sys "gem build operast.gemspec" end
+	mv "#{dir}/#{@product}", "."
+
+#  - product:	$(guide)
+#    method*: |
+#	chdir "doc" do sys "rook :doc :retrieve" end
+
+  - product:    $(project)-$(release)
+    ingreds:	[ $(text_files), :apidoc ]
+    method*: |
+        comment 'delete and create directory'
+	#release = @matches[1]
+        release = '$(release)'
+	dir = "$(project)-#{release}"
+	rm_rf dir if test(?d, dir)
+	mkdir_p dir
+	#
+	rm_rf 'lib/**/*.rbc'
+	store 'lib/**/*', 'bin/*', text_files, dir
+	#
+	#rm_f 'test/**/*.{cache,rbc}'
+	#store 'test/*.{rb,yaml}', 'test/data/**/*', dir
+	#
+	store '$(apidocdir)/**/*', dir
+	#
+	edit "#{dir}/**/*" do |content|
+	  content.gsub!(/\$Release:.*?\$/, "$Release: #{release} $")
+	  content.gsub!(/\$Release\$/, "#{release}")
+	  content.gsub!(/\$Copyright.*?\$/, '$(copyright)')
+	  content.gsub!(/\$License\$/, '$(license)')
+	  content
+	end
+	#
+	chmod 0644, "#{dir}/**/*", :filetype=>'file'
+
+  - product:	:index
+    ingreds:	[ webiste/index.html ]
+
+  - product:	website/index.html
+    ingreds:	[ README.rdoc ]
+    method*: |
+	mkdir_p 'website' unless test(?d, 'website')
+	sys "rdoc -1 -c utf-8 #{@ingred} > #{@product}"
+        release = '$(release)'
+	edit @product do |content|
+	  content.gsub! /<title>.*?<\/title>/,    "<title>Operast README</title>"
+	  content.gsub! /<body>.*?<\/table>\n/m,  ""
+	  content.gsub! /<h2>Classes<\/h2>\n/,    ""
+	  content.gsub! /<\/html>.*/m,            "</html>\n"
+	  content.gsub! /\$Release:.*?\$/,  "$Release: #{release} $"
+	  content.gsub! /\$Release\$/,      "#{release}"
+	  content.gsub! /\$Copyright.*?\$/, "$(copyright)"
+	  content.gsub! /\$License\$/,      "$(license)"
+	  content
+	end
+	

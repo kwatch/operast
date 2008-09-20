@@ -1,0 +1,65 @@
+= Operast README
+
+Release: $Release$
+
+http://rubyforge.org/projects/operast
+
+http://operast.rubyforge.org/
+
+
+
+== About
+
+Operast (Operator + AST) is a library to convert Ruby expression
+into other language.
+Currently, only SQL is supported.
+
+Operast requires Ruby 1.8 or later.
+
+
+== Example
+
+    require 'operast'
+    require 'operast/translator/sql'
+    
+    x = Operast::Variable.new('x')
+    y = Operast::Variable.new('y')
+    t = Operast::SqlTranslator.new
+  
+    p t.translate(x)                     #=> "x"
+    p t.translate(x + 1)                 #=> "(x + 1)"
+    p t.translate(x + y)                 #=> "(x + y)"
+    p t.translate(x * y + 2)             #=> "((x * y) + 2)"
+    p t.translate(x + y * 2)             #=> "(x + (y * 2))"
+    p t.translate(x ** y)                #=> "power(x,y)"
+    p t.translate(x > 0)                 #=> "(x > 0)"
+    p t.translate(y < 1)                 #=> "(y < 1)"
+    p t.translate(x == 0)                #=> "(x = 0)"
+    p t.translate(y ^ "who's who")       #=> "(y <> 'who\\'s who')"
+    p t.translate(y <=> 3.14)            #=> "(y <> 3.14)"
+    p t.translate((x > 0) & (y < 1))     #=> "((x > 0) and (y < 1))"
+    p t.translate((x == 0) | (y ^ 1))    #=> "((x = 0) or (y <> 1))"
+    p t.translate(x == nil)              #=> "(x is null)"
+    p t.translate(x <=> nil)             #=> "(x is not null)"
+    p t.translate(x =~ '%pattern%')      #=> "(x like '%pattern%')"
+    p t.translate(x.in?([10,20,30]))     #=> "(x in (10,20,30))"
+    p t.translate(x.in?(10..30))         #=> "(x between 10 and 30)"
+
+
+== Restrictions
+
+* 'x + 1' is OK, but '1 + x' is NG.
+* 'x & y' is OK, but 'x && y' is NG.
+* 'x != y' is NG in Ruby 1.8. Use 'x ^ y' or 'x <=> y' instead.
+* function (such as sum() or avg()) is not supported.
+
+
+== License
+
+$License$
+
+
+== Author
+
+makoto kuwata <kwa.at.kuwata-lab.com>
+

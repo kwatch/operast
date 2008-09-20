@@ -1,0 +1,88 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>Operast README</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+</head>
+
+<h1>Operast README</h1>
+<p>
+Release: 0.1.0
+</p>
+<p>
+<a
+href="http://rubyforge.org/projects/operast">rubyforge.org/projects/operast</a>
+</p>
+<p>
+<a href="http://operast.rubyforge.org">operast.rubyforge.org</a>/
+</p>
+<h2>About</h2>
+<p>
+Operast (Operator + AST) is a library to convert Ruby expression into other
+language. Currently, only SQL is supported.
+</p>
+<p>
+Operast requires Ruby 1.8 or later.
+</p>
+<h2>Example</h2>
+<pre>
+    require 'operast'
+    require 'operast/translator/sql'
+
+    x = Operast::Variable.new('x')
+    y = Operast::Variable.new('y')
+    t = Operast::SqlTranslator.new
+
+    p t.translate(x)                     #=&gt; &quot;x&quot;
+    p t.translate(x + 1)                 #=&gt; &quot;(x + 1)&quot;
+    p t.translate(x + y)                 #=&gt; &quot;(x + y)&quot;
+    p t.translate(x * y + 2)             #=&gt; &quot;((x * y) + 2)&quot;
+    p t.translate(x + y * 2)             #=&gt; &quot;(x + (y * 2))&quot;
+    p t.translate(x ** y)                #=&gt; &quot;power(x,y)&quot;
+    p t.translate(x &gt; 0)                 #=&gt; &quot;(x &gt; 0)&quot;
+    p t.translate(y &lt; 1)                 #=&gt; &quot;(y &lt; 1)&quot;
+    p t.translate(x == 0)                #=&gt; &quot;(x = 0)&quot;
+    p t.translate(y ^ &quot;who's who&quot;)       #=&gt; &quot;(y &lt;&gt; 'who\\'s who')&quot;
+    p t.translate(y &lt;=&gt; 3.14)            #=&gt; &quot;(y &lt;&gt; 3.14)&quot;
+    p t.translate((x &gt; 0) &amp; (y &lt; 1))     #=&gt; &quot;((x &gt; 0) and (y &lt; 1))&quot;
+    p t.translate((x == 0) | (y ^ 1))    #=&gt; &quot;((x = 0) or (y &lt;&gt; 1))&quot;
+    p t.translate(x == nil)              #=&gt; &quot;(x is null)&quot;
+    p t.translate(x &lt;=&gt; nil)             #=&gt; &quot;(x is not null)&quot;
+    p t.translate(x =~ '%pattern%')      #=&gt; &quot;(x like '%pattern%')&quot;
+    p t.translate(x.in?([10,20,30]))     #=&gt; &quot;(x in (10,20,30))&quot;
+    p t.translate(x.in?(10..30))         #=&gt; &quot;(x between 10 and 30)&quot;
+</pre>
+<h2>Restrictions</h2>
+<ul>
+<li>&#8216;x + 1&#8217; is OK, but &#8216;1 + x&#8217; is NG.
+
+</li>
+<li>&#8216;x &amp; y&#8217; is OK, but &#8216;x &amp;&amp; y&#8217; is NG.
+
+</li>
+<li>&#8216;x != y&#8217; is NG in Ruby 1.8. Use &#8216;x ^ y&#8217; or &#8216;x
+&lt;=&gt; y&#8217; instead.
+
+</li>
+<li>function (such as sum() or avg()) is not supported.
+
+</li>
+</ul>
+<h2>License</h2>
+<p>
+MIT License
+</p>
+<h2>Author</h2>
+<p>
+makoto kuwata &lt;kwa.at.kuwata-lab.com&gt;
+</p>
+
+
+
+
+
+
+
+</body>
+</html>
